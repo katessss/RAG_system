@@ -81,11 +81,15 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 │   │   └── generate_answer.py   # Генерация ответа через Qwen
 │   ├── load_data.py             # Точка входа: индексирование документов
 │   ├── tests_for_rag.py         # Бенчмарк retrieval-части
+│   ├── run_query.py             # Запуск одного вопроса
 │   └── test_for_qwen.py         # Бенчмарк LLM-части
 ├── temp/                        # Кэш результатов парсинга PDF
 ├── tests/                       # Кэш результатов парсинга PDF
 │   ├── results/
 │   │   ├── llm_eval_e5.csv      # Резульататы ответов llm
+│   │   ├── benchmark_report_for_e5.csv            # Резульататы бенчамарка для модеи e5
+│   │   ├── benchmark_report_all.csv               # Резульататы бенчамарка все комбинации моделей × стратегий
+│   │   ├── benchmark_report_for_semantic.csv      # Резульататы бенчамарка только сравнения семантического поиска
 │   └── benchmark.json           # Синтетический бенчмарк
 ├── logger_config.py
 ├── requirements.txt
@@ -122,7 +126,7 @@ python -m src.load_data
 
 ### Шаг 3 — Запустить поиск / получить ответ
 
-Пример использования в коде:
+Пример использования в коде в src.run_query:
 
 ```python
 from src.databases import get_chroma_collection, get_sqlite_conn
@@ -160,13 +164,28 @@ print(answer)
 
 ### Бенчмарк retrieval-части (поиск без LLM)
 
-Тестирует все комбинации моделей × стратегий и выводит Hit@1/5/10 и MRR:
+По умолчанию тестириуются все стратегии для модели, указанной в .env (MODEL_TYPE): 
 
 ```bash
 python -m src.tests_for_rag
 ```
 
 Результаты выводятся в консоль. Файл бенчмарка должен лежать в `tests/benchmark.json`.
+
+> **Примечание:** В репозитории присутствуют готовые индексы для всех трёх моделей (DB/semantic_search_db_e5, _user2, _giga). 
+
+Можно запустиить все комбинации моделей × стратегий:
+```python
+for m_type in ["e5", "user2", "giga"]:
+    data = evaluate_strategies_for_model(queries, m_type) 
+```
+
+И сравнение только семантического поиска:
+```python
+for m_type in ["e5", "user2", "giga"]:
+    data = evaluate_model(queries, m_type) 
+```
+
 
 ### Бенчмарк LLM-части (полный пайплайн)
 
