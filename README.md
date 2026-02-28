@@ -57,7 +57,7 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 │   ├── semantic_search_db_e5/
 │   ├── semantic_search_db_user2/
 │   └── semantic_search_db_giga/
-├── temp/                        # Кэш результатов парсинга PDF
+├── research/                    # Эксперменты и ноутбуки
 ├── benchmarks_generation/
 │   ├── generate_sintetic.py     # Генерация тестовых вопросов через GPT-4
 │   ├── exported_chunks.json     # Экспортированные чанки
@@ -82,6 +82,11 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 │   ├── load_data.py             # Точка входа: индексирование документов
 │   ├── tests_for_rag.py         # Бенчмарк retrieval-части
 │   └── test_for_qwen.py         # Бенчмарк LLM-части
+├── temp/                        # Кэш результатов парсинга PDF
+├── tests/                       # Кэш результатов парсинга PDF
+│   ├── results/
+│   │   ├── llm_eval_e5.csv      # Резульататы ответов llm
+│   └── benchmark.json           # Синтетический бенчмарк
 ├── logger_config.py
 ├── requirements.txt
 └── .env
