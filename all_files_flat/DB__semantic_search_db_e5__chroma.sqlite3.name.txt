@@ -1,1 +1,0 @@
-DB__semantic_search_db_e5__chroma.sqlite3

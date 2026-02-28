@@ -1,1 +1,0 @@
-DB__semantic_search_db_giga__bcf86c9f-952a-4040-a382-70e81e9b0793__index_metadata.pickle
