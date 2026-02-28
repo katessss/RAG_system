@@ -10,33 +10,53 @@ from src.databases.sqlite import save_to_sqlite
 import os
 from dotenv import load_dotenv
 load_dotenv()
-CUR_MODEL_TYPE = "giga"#os.getenv("MODEL_TYPE")
-# EMMBEDER_MODEL = load_e5_model("intfloat/multilingual-e5-large", "cuda:2")
-# LLM_MODEL = load_model("Qwen/Qwen2.5-7B-Instruct", "cuda" if torch.cuda.is_available() else "cpu")
+CUR_MODEL_TYPE = os.getenv("MODEL_TYPE")
 
-def load_data_for_rag(folder_path: str = "data"):
+
+
+def check_databases(model_type: str):
+    """
+    Проверяет, существуют ли файлы SQLite и папка ChromaDB для конкретной модели.
+    """
+    db_dir = Path("DB")
+    sqlite_path = db_dir / "FTS_search.db"
+    chroma_path = db_dir / f"semantic_search_db_{model_type}"
+
+    if not db_dir.exists():
+        return False
+
+    if not sqlite_path.exists() or sqlite_path.stat().st_size < 1024:
+        return False
+
+    if not chroma_path.exists() or not any(chroma_path.iterdir()):
+        return False
+
+    return True
+
+
+def load_data_for_rag(folder_path: str = "data", model_type=CUR_MODEL_TYPE):
+    if check_databases(CUR_MODEL_TYPE):
+        return 
+        
     # Загружаем и парсим PDF файлы из папки
-    # results = parse_pdf(folder_path)
+    results = parse_pdf(folder_path)
 
     # Преобразуем результаты парсинга в чанки и создаем эмбеддинги
-    # all_chunks = []
-    # for name, result in results.items():
-    #     chunks = process_docling_to_chunks(result=result, max_text_len = 500, min_merge_threshold = 300, file_name = name)
-    #     all_chunks.extend(chunks)
-    file_path = "benchmarks_generation/exported_chunks.json"
-    with open(file_path, "r", encoding="utf-8") as f:
-        all_chunks = json.load(f)        
-    print(f"Успешно загружено {len(all_chunks)} чанков из файла {file_path}")
+    all_chunks = []
+    for name, result in results.items():
+        chunks = process_docling_to_chunks(result=result, max_text_len = 500, min_merge_threshold = 300, file_name = name)
+        all_chunks.extend(chunks)
     
-    chunks_with_vectors = create_embeddings(all_chunks, CUR_MODEL_TYPE, batch_size=4)
+    chunks_with_vectors = create_embeddings(all_chunks, model_type, batch_size=4)
 
-    # Path("DB").mkdir(parents=True, exist_ok=True)
+    Path("DB").mkdir(parents=True, exist_ok=True)
     
     # Сохраняем чанки с эмбеддингами в ChromaDB
-    save_to_chroma(chunks_with_vectors, collection_name="vipnet_docs", db_path=f"DB/semantic_search_db_{CUR_MODEL_TYPE}")
+    save_to_chroma(chunks_with_vectors, collection_name="vipnet_docs", db_path=f"DB/semantic_search_db_{model_type}")
 
     # Сохраняем чанки в SQLite для полнотекстового поиска
-    # save_to_sqlite(all_chunks, db_path=f"DB/FTS_search.db")
+    save_to_sqlite(all_chunks, db_path=f"DB/FTS_search.db")
 
-if __name__=='__main__':
-    load_data_for_rag()
+    return
+
+    

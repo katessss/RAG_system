@@ -1,17 +1,20 @@
 from sentence_transformers import SentenceTransformer
 import torch
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+DEVICE=os.getenv("DEVICE", "cuda")
 from logger_config import setup_logger
 logger = setup_logger(__name__)
 
 models = ["e5", "giga", "user2"]
 
-def load_embedder(model_type: str, DEVICE="cuda:2"):
+def load_embedder(model_type: str, device=DEVICE):
     if model_type=="e5": 
-        return SentenceTransformer("intfloat/multilingual-e5-large", device=DEVICE)
+        return SentenceTransformer("intfloat/multilingual-e5-large", device=device)
 
     elif model_type=="user2":
-        return  SentenceTransformer("deepvk/USER2-base", device=DEVICE)
+        return  SentenceTransformer("deepvk/USER2-base", device=device)
         
     elif model_type=="giga":
         return SentenceTransformer(
@@ -21,7 +24,7 @@ def load_embedder(model_type: str, DEVICE="cuda:2"):
                 "trust_remote_code": True,
             },
             config_kwargs={"trust_remote_code": True},
-            device=DEVICE
+            device=device
         )
         
     else:

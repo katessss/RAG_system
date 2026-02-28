@@ -10,6 +10,7 @@ from logger_config import setup_logger
 # Загрузка конфигурации
 logger = setup_logger(__name__)
 load_dotenv()
+DEVICE=os.getenv("DEVICE", "cuda")
 
 from src.utils.retrivers import fts_retrieve, semantic_retrieve
 from src.utils.combinations import base_search, search_with_rerank, rrf_combination
@@ -103,7 +104,7 @@ def run_metrics_benchmark(benchmark_data, search_logic_func, top_k=10, desc=""):
     }
 
 
-def evaluate_strategies_for_model(benchmark_data, model_type, device="cuda:2"):
+def evaluate_strategies_for_model(benchmark_data, model_type, device=DEVICE):
     """Сравнивает Base vs RRF vs Reranker для конкретной модели"""
     model = load_embedder(model_type, device)
     collection = get_chroma_collection(db_path=f"DB/semantic_search_db_{model_type}")
@@ -164,6 +165,7 @@ def evaluate_model(benchmark_data, model_type, top_k=10):
         "MRR": round(mrr_sum/total_queries, 4),
         "Time": round(avg_time, 2)
     }
+
 
 
 if __name__ == "__main__":

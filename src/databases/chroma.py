@@ -17,8 +17,8 @@ def save_to_chroma(chunks_with_vectors, collection_name, db_path):
     client = chromadb.PersistentClient(path=db_path)
     
     # Создаем или получаем коллекцию
-    # Мы отключаем встроенную модель эмбеддингов, так как используем свою
-    collection = client.get_or_create_collection(name=collection_name)
+    # отключаем встроенную модель эмбеддингов, так как используем свою
+    collection = client.get_or_create_collection(name=collection_name, embedding_function=None)
 
     ids = []
     documents = []
