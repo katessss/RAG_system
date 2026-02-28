@@ -182,14 +182,13 @@ if __name__ == "__main__":
 
     # Запускаем цикл по всем интересующим моделям
     for m_type in ["e5", "user2", "giga"]:
-        data= evaluate_strategies_for_model(queries, m_type) 
-        report[m_type] = data
-    # Итоговое сравнение в консоли
-    print("\n" + "="*50)
-    print("ИТОГОВАЯ ТАБЛИЦА (Hit@1)")
-    print("="*50)
-    for m, strats in report.items():
-        line = f"{m.upper():<8} | "
-        line += " | ".join([f"{s}: {data['Hit@1']}%" for s, data in strats.items()])
-        print(line)
-    print("="*50)
+        data= evaluate_model(queries, m_type) 
+    # # Итоговое сравнение в консоли
+    # print("\n" + "="*50)
+    # print("ИТОГОВАЯ ТАБЛИЦА (Hit@1)")
+    # print("="*50)
+    # for m, strats in report.items():
+    #     line = f"{m.upper():<8} | "
+    #     line += " | ".join([f"{s}: {data['Hit@1']}%" for s, data in strats.items()])
+    #     print(line)
+    # print("="*50)

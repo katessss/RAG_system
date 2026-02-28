@@ -1,9 +1,0 @@
-torch>=2.6.0
-transformers==4.51.0
-sentence-transformers==5.1.1
-accelerate>=0.33.0
-chromadb
-chromadb
-docling
-onnxruntime-gpua
-einops
