@@ -84,7 +84,7 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 │   ├── run_query.py             # Запуск одного вопроса
 │   └── test_for_qwen.py         # Бенчмарк LLM-части
 ├── temp/                        # Кэш результатов парсинга PDF
-├── tests/                       # Кэш результатов парсинга PDF
+├── tests/                       
 │   ├── results/
 │   │   ├── llm_eval_e5.csv      # Резульататы ответов llm
 │   │   ├── benchmark_report_for_e5.csv            # Резульататы бенчамарка для модеи e5
