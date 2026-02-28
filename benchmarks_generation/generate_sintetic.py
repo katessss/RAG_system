@@ -38,7 +38,7 @@ def generate_questions(chunk_content):
         return []
 
 
-if __name__=="__main__"
+if __name__=="__main__":
     file_path = "benchmarks_generation/exported_chunks.json"
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)

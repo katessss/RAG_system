@@ -5,10 +5,11 @@ from docling_core.types.doc import DoclingDocument
 import torch
 import json
 from pathlib import Path
-
+from logger_config import setup_logger
+logger = setup_logger(__name__)
 
 def init_converter():
-    print("Инициализация тяжелых моделей Docling...")
+    logger.info("Инициализация тяжелых моделей Docling...")
     pipeline_options = PdfPipelineOptions()
     pipeline_options.do_ocr = True 
     pipeline_options.do_table_structure = True 

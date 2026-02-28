@@ -7,6 +7,8 @@ from src.processing.chunker import process_docling_to_chunks, create_embeddings
 from src.databases.chroma import save_to_chroma
 from src.databases.sqlite import save_to_sqlite
 
+from logger_config import setup_logger
+logger = setup_logger(__name__)
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -36,8 +38,10 @@ def check_databases(model_type: str):
 
 def load_data_for_rag(folder_path: str = "data", model_type=CUR_MODEL_TYPE):
     if check_databases(CUR_MODEL_TYPE):
+        logger.info(f"Базы данных для модели {CUR_MODEL_TYPE} уже существуют и не пустые. Пропускаем этап загрузки и обработки данных.")
         return 
         
+    logger.info(f"Загрузка данных для модели {model_type}")
     # Загружаем и парсим PDF файлы из папки
     results = parse_pdf(folder_path)
 
@@ -59,4 +63,8 @@ def load_data_for_rag(folder_path: str = "data", model_type=CUR_MODEL_TYPE):
 
     return
 
+
+
+if __name__=="__main__":
+    load_data_for_rag()
     

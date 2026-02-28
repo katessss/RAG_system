@@ -6,6 +6,10 @@ from tqdm import tqdm
 from pathlib import Path
 from dotenv import load_dotenv
 from logger_config import setup_logger
+import os
+from dotenv import load_dotenv
+load_dotenv()
+CUR_MODEL_TYPE = os.getenv("MODEL_TYPE")
 
 # Загрузка конфигурации
 logger = setup_logger(__name__)
@@ -84,10 +88,8 @@ def run_metrics_benchmark(benchmark_data, search_logic_func, top_k=10, desc=""):
     avg_time = (total_time / total_queries) * 1000
         
     print(f"\nРезультаты [{desc}]:")
-    print("\n" + "="*40)
-    print(f"РЕЗУЛЬТАТЫ БЕНЧМАРКА ДЛЯ {model_type}")
     print("="*40)
-    print(f"Hit@1:  {(hits[1]/total_queries)*100:>6.2f}% )")
+    print(f"Hit@1:  {(hits[1]/total_queries)*100:>6.2f}%")
     print(f"Hit@5:  {(hits[5]/total_queries)*100:>6.2f}%")
     print(f"Hit@10: {(hits[10]/total_queries)*100:>6.2f}%")
     print(f"MRR:    {mrr_sum/total_queries:>8.4f}")
@@ -150,7 +152,7 @@ def evaluate_model(benchmark_data, model_type, top_k=10):
     print("\n" + "="*40)
     print(f"РЕЗУЛЬТАТЫ БЕНЧМАРКА ДЛЯ {model_type}")
     print("="*40)
-    print(f"Hit@1:  {(hits[1]/total_queries)*100:>6.2f}% )")
+    print(f"Hit@1:  {(hits[1]/total_queries)*100:>6.2f}%")
     print(f"Hit@5:  {(hits[5]/total_queries)*100:>6.2f}%")
     print(f"Hit@10: {(hits[10]/total_queries)*100:>6.2f}%")
     print(f"MRR:    {mrr_sum/total_queries:>8.4f}")
@@ -181,15 +183,23 @@ if __name__ == "__main__":
     report = {}
 
     # Запускаем цикл по всем интересующим моделям
-    for m_type in ["e5", "user2", "giga"]:
-        data= evaluate_strategies_for_model(queries, m_type) 
-        report[m_type] = data
-    # Итоговое сравнение в консоли
-    print("\n" + "="*50)
-    print("ИТОГОВАЯ ТАБЛИЦА (Hit@1)")
-    print("="*50)
-    for m, strats in report.items():
-        line = f"{m.upper():<8} | "
-        line += " | ".join([f"{s}: {data['Hit@1']}%" for s, data in strats.items()])
-        print(line)
-    print("="*50)
+    # for m_type in ["e5", "user2", "giga"]:
+    #     data = evaluate_strategies_for_model(queries, m_type) 
+    #     report[m_type] = data
+    # for m_type in ["e5", "user2", "giga"]:
+    #     data = evaluate_model(queries, m_type) 
+    #     report[m_type] = data
+    
+    m_type = CUR_MODEL_TYPE
+    data = evaluate_strategies_for_model(queries, m_type)   
+    report[m_type] = data
+
+    output_folder = Path("tests/results")
+    output_folder.mkdir(exist_ok=True)
+    path_to_save = output_folder / f"benchmark_report.json"
+
+    with path_to_save.open("w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=4)
+
+    logger.info(f"Отчёт сохранён: {path_to_save}")
+    
