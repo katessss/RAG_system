@@ -1,0 +1,64 @@
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions, AcceleratorDevice, AcceleratorOptions, RapidOcrOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling_core.types.doc import DoclingDocument 
+import torch
+import json
+from pathlib import Path
+
+
+def init_converter():
+    print("Инициализация тяжелых моделей Docling...")
+    pipeline_options = PdfPipelineOptions()
+    pipeline_options.do_ocr = True 
+    pipeline_options.do_table_structure = True 
+    pipeline_options.generate_table_images = True
+    pipeline_options.generate_picture_images = True 
+    pipeline_options.ocr_options = RapidOcrOptions(lang=["rus", "en"]) 
+    
+    device = AcceleratorDevice.CUDA if torch.cuda.is_available() else AcceleratorDevice.CPU
+    pipeline_options.accelerator_options = AcceleratorOptions(
+        num_threads=8, 
+        device=device
+    )
+
+    return DocumentConverter(format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)})
+
+
+def parse_pdf(path_to_fodler: str, save_path: str = 'temp', cache_path='temp'):
+    results = {}
+
+    temp_dir = Path(save_path)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = Path(cache_path)
+
+
+    converter = None
+
+    for pdf_path in Path(path_to_fodler).glob("*.pdf"):
+        json_cache = cache_dir / f"{pdf_path.stem}_extracted_content.json"
+
+        # если json уже существует, загружаем его
+        if json_cache.exists():
+            print(f"Загрузка из кэша: {pdf_path.name}")
+            with open(json_cache, "r", encoding="utf-8") as f:
+                data_dict = json.load(f)
+                results[pdf_path.name] = DoclingDocument.model_validate(data_dict)
+            continue
+
+        if converter is None:
+            converter = init_converter()
+            
+        result = converter.convert(pdf_path)
+
+        output_file = temp_dir / f"{pdf_path.stem}_extracted_content"
+        with open(f"{output_file}.md", "w", encoding="utf-8") as f:
+            f.write(result.document.export_to_markdown())
+
+        with open(f"{output_file}.json", "w", encoding="utf-8") as f:
+            f.write(json.dumps(result.document.export_to_dict(), indent=2, ensure_ascii=False))
+
+        results[pdf_path.name] = result.document
+
+    return results
+
