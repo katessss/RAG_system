@@ -17,8 +17,8 @@
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone <repo_url>
-cd <repo_name>
+git clone <https://github.com/katessss/RAG_system.git>
+cd <RAG_system>
 ```
 
 ### 2. Создать виртуальное окружение
