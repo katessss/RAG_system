@@ -37,8 +37,8 @@ def check_databases(model_type: str):
 
 
 def load_data_for_rag(folder_path: str = "data", model_type=CUR_MODEL_TYPE):
-    if check_databases(CUR_MODEL_TYPE):
-        logger.info(f"Базы данных для модели {CUR_MODEL_TYPE} уже существуют и не пустые. Пропускаем этап загрузки и обработки данных.")
+    if check_databases(model_type):
+        logger.info(f"Базы данных для модели {model_type} уже существуют и не пустые. Пропускаем этап загрузки и обработки данных.")
         return 
         
     logger.info(f"Загрузка данных для модели {model_type}")
@@ -58,13 +58,23 @@ def load_data_for_rag(folder_path: str = "data", model_type=CUR_MODEL_TYPE):
     # Сохраняем чанки с эмбеддингами в ChromaDB
     save_to_chroma(chunks_with_vectors, collection_name="vipnet_docs", db_path=f"DB/semantic_search_db_{model_type}")
 
+    sqlite_path=f"DB/FTS_search.db"
+    if not  Path(sqlite_path).exists() or Path(sqlite_path).stat().st_size < 1024:
+        logger.info("Сохранение данных в SQLite FTS...")
     # Сохраняем чанки в SQLite для полнотекстового поиска
-    save_to_sqlite(all_chunks, db_path=f"DB/FTS_search.db")
+        save_to_sqlite(all_chunks, db_path=sqlite_path)
 
+    logger.info("Все этапы загрузки данных завершены успешно.")
     return
 
 
 
 if __name__=="__main__":
-    load_data_for_rag()
-    
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--folder", default="data")
+    parser.add_argument("--model", default=CUR_MODEL_TYPE)
+    args = parser.parse_args()
+
+    load_data_for_rag(folder_path=args.folder, model_type=args.model )    

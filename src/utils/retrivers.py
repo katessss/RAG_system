@@ -12,9 +12,9 @@ logger = setup_logger(__name__)
 from src.processing.cleaners import prepare_query_from_natural_language, format_text
     
 
-def get_search_results(query, collection, sqlite_conn, model, top_k=5):
+def get_search_results(query, collection, sqlite_conn, model, model_type, top_k=5):
     fts_results = fts_retrieve(query=query, connection=sqlite_conn, type_of_search="AND", top_k=top_k)
-    semantic_results = semantic_retrieve(query=query, collection=collection, model=model, top_k=top_k)
+    semantic_results = semantic_retrieve(query=query, collection=collection, model=model, model_type=model_type, top_k=top_k)
     
     # Если по AND ничего не нашли, пробуем более мягкий поиск через OR
     if not fts_results:

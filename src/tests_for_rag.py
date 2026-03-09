@@ -21,6 +21,8 @@ from src.utils.combinations import base_search, search_with_rerank, rrf_combinat
 from src.databases import get_chroma_collection, get_sqlite_conn
 from src.models.embedders import load_embedder
 from src.models.reranker import load_reranker
+from src.load_data import load_data_for_rag
+
 
 
 def calculate_retrieval_metrics(results, target_content, top_k):
@@ -171,7 +173,21 @@ def evaluate_model(benchmark_data, model_type, top_k=10):
 
 
 if __name__ == "__main__":
-    BENCHMARK_PATH = "tests/benchmark.json"
+    import argparse
+    parser = argparse.ArgumentParser(description="Тестирование и оценка моделей и методов комбинации данных")
+    parser.add_argument("--path_to_bench", default="tests/benchmark.json")
+    parser.add_argument("--folder", default="data")
+    parser.add_argument("--model", default=CUR_MODEL_TYPE)
+    parser.add_argument("--type_of_test", default="cur_model")
+
+    args = parser.parse_args()
+
+    folder_path=args.folder
+    BENCHMARK_PATH=args.path_to_bench
+    model_type=args.model
+    type_of_test=args.type_of_test
+
+
     if not Path(BENCHMARK_PATH).exists():
         logger.error("Файл бенчмарка не найден!")
         exit()
@@ -182,21 +198,32 @@ if __name__ == "__main__":
     # Глобальный отчет
     report = {}
 
-    # Запускаем цикл по всем интересующим моделям
-    # for m_type in ["e5", "user2", "giga"]:
-    #     data = evaluate_strategies_for_model(queries, m_type) 
-    #     report[m_type] = data
-    # for m_type in ["e5", "user2", "giga"]:
-    #     data = evaluate_model(queries, m_type) 
-    #     report[m_type] = data
+    # Цикл по всем интересующим моделям
+    if type_of_test=="all":
+        for m_type in ["e5", "user2", "giga"]:
+            load_data_for_rag(folder_path=folder_path, model_type=m_type)      
+            data = evaluate_strategies_for_model(queries, m_type) 
+            report[m_type] = data
+
+    # Цикл поп порверки семантического поиска
+    elif type_of_test=="for_semantic":
+        for m_type in ["e5", "user2", "giga"]:
+            load_data_for_rag(folder_path=folder_path, model_type=m_type)      
+            data = evaluate_model(queries, m_type) 
+            report[m_type] = data
     
-    m_type = CUR_MODEL_TYPE
-    data = evaluate_strategies_for_model(queries, m_type)   
-    report[m_type] = data
+    elif type_of_test=="cur_model" :
+        load_data_for_rag(folder_path=folder_path, model_type=model_type)      
+        data = evaluate_strategies_for_model(queries, model_type)   
+        report[model_type] = data
+
+    else:
+        logger.error(f"Тест {type_of_test} не найден")
+        exit()
 
     output_folder = Path("tests/results")
     output_folder.mkdir(exist_ok=True)
-    path_to_save = output_folder / f"benchmark_report.json"
+    path_to_save = output_folder / f"benchmark_report_{type_of_test}.json"
 
     with path_to_save.open("w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=4)
