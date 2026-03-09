@@ -100,7 +100,7 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 
 ## Запуск
 
-### Шаг 1 — Положить PDF в папку `data/`
+### Шаг 1 - Положить PDF в папку `data/`
 
 ```
 data/
@@ -109,54 +109,34 @@ data/
 └── ...
 ```
 
-### Шаг 2 — Проиндексировать документы
+Можно использовать другую папку - тогда передавать путь через аргумент `--folder`.
+
+### Шаг 2 - Проиндексировать документы
 
 ```bash
 python -m src.load_data
+python -m src.load_data --folder path/to/docs --model giga
 ```
 
 Скрипт автоматически:
-1. Проверит, существуют ли индексы — если да, пропустит индексирование
+1. Проверит, существуют ли индексы - если да, пропустит индексирование
 2. Распарсит PDF через Docling (результаты закэшируются в `temp/`)
 3. Нарежет документы на чанки
 4. Создаст эмбеддинги и сохранит в ChromaDB
 5. Сохранит чанки в SQLite FTS5
 
-> Первый запуск занимает значительное время — Docling загружает свои модели и обрабатывает PDF. Повторные запуски используют кэш из `temp/` и работают быстро.
+> Первый запуск занимает значительное время - Docling загружает свои модели и обрабатывает PDF. Повторные запуски используют кэш из `temp/` и работают быстро.
+>
+> Все остальные точки входа сами проверяют наличие нужных индексов и при необходимости запускают индексирование - можно не вызывать `load_data.py` отдельно.
 
-### Шаг 3 — Запустить поиск / получить ответ
+### Шаг 3 - Интерактивный режим (чат)
 
-Пример использования в коде в src.run_query:
-
-```python
-from src.databases import get_chroma_collection, get_sqlite_conn
-from src.models.embedders import load_embedder
-from src.models.reranker import load_reranker
-from src.models.llm import load_qwen_model
-from src.utils.retrivers import get_search_results
-from src.utils.combinations import search_with_rerank
-from src.utils.generate_answer import generate_qwen_answer
-
-# Инициализация
-collection = get_chroma_collection()
-connection = get_sqlite_conn()
-embedder = load_embedder("giga")
-reranker = load_reranker()
-llm, tokenizer = load_qwen_model()
-
-# Поиск
-query = "Как настроить туннельный режим на ViPNet Coordinator HW1000?"
-semantic_res, fts_res = get_search_results(query, collection, connection, embedder, top_k=10)
-
-# Объединение и реранкинг
-all_res = {r['content']: r for r in semantic_res + fts_res}.values()
-top = search_with_rerank(query, list(all_res), reranker, top_k=5)
-
-# Генерация ответа
-context = "\n\n".join([f"[стр. {c['page']}]\n{c['content']}" for c in top])
-answer = generate_qwen_answer(query, context, llm, tokenizer)
-print(answer)
+```bash
+python -m src.run_query
+python -m src.run_query --folder path/to/docs --model giga
 ```
+
+Работает в режиме бесконечного цикла. Для выхода - `Ctrl+C`.
 
 ---
 
@@ -164,38 +144,44 @@ print(answer)
 
 ### Бенчмарк retrieval-части (поиск без LLM)
 
-По умолчанию тестириуются все стратегии для модели, указанной в .env (MODEL_TYPE): 
-
 ```bash
 python -m src.tests_for_rag
+python -m src.tests_for_rag --model giga --type_of_test all
 ```
 
-Результаты выводятся в консоль. Файл бенчмарка должен лежать в `tests/benchmark.json`.
+| Аргумент | Описание | По умолчанию |
+|---|---|---|
+| `--path_to_bench` | Путь к файлу бенчмарка | `tests/benchmark.json` |
+| `--folder` | Путь к папке с PDF | `data` |
+| `--model` | Модель эмбеддингов | из `.env` |
+| `--type_of_test` | Режим тестирования | `cur_model` |
 
-> **Примечание:** В репозитории присутствуют готовые индексы для всех трёх моделей (DB/semantic_search_db_e5, _user2, _giga). 
+Режимы `--type_of_test`:
 
-Можно запустиить все комбинации моделей × стратегий:
-```python
-for m_type in ["e5", "user2", "giga"]:
-    data = evaluate_strategies_for_model(queries, m_type) 
-```
+- `cur_model` - все три стратегии (Base / RRF / Reranker) для модели из `.env`
+- `for_semantic` - сравнение только эмбеддеров (e5, user2, giga), без FTS
+- `all` - полный прогон: все модели × все стратегии
 
-И сравнение только семантического поиска:
-```python
-for m_type in ["e5", "user2", "giga"]:
-    data = evaluate_model(queries, m_type) 
-```
+Результаты выводятся в консоль и сохраняются в `tests/results/benchmark_report_[type_of_test].json`.
 
+> **Примечание:** В репозитории уже лежат готовые индексы для всех трёх моделей (`DB/semantic_search_db_e5`, `_user2`, `_giga`), поэтому тестировать можно сразу без переиндексации.
 
 ### Бенчмарк LLM-части (полный пайплайн)
 
-Прогоняет вопросы через весь пайплайн и сохраняет ответы модели в CSV:
-
 ```bash
 python -m src.test_for_qwen
+python -m src.test_for_qwen --model giga --path_to_bench tests/benchmark.json
 ```
 
-Результаты сохраняются в `tests/results/llm_eval_{MODEL_TYPE}.csv` с колонками: вопрос, ответ модели, эталонный чанк, использованный контекст.
+| Аргумент | Описание | По умолчанию |
+|---|---|---|
+| `--path_to_bench` | Путь к файлу бенчмарка | `tests/benchmark.json` |
+| `--folder` | Путь к папке с PDF | `data` |
+| `--model` | Модель эмбеддингов | из `.env` |
+
+Результат сохраняется в `tests/results/llm_eval_[model].csv` с колонками: вопрос, ответ ИИ, эталонный текст, номер страницы.
+
+---
 
 ### Генерация тестовых вопросов
 
@@ -230,10 +216,10 @@ python -m benchmarks_generation.generate_sintetic
 
 ## Возможные проблемы
 
-**`CUDA out of memory`** — уменьшить `batch_size` в `load_data.py` (параметр `create_embeddings(..., batch_size=4)`).
+**`CUDA out of memory`** - уменьшить `batch_size` в `load_data.py` (параметр `create_embeddings(..., batch_size=4)`).
 
-**Docling долго инициализируется** — это нормально при первом запуске, модели скачиваются автоматически.
+**Docling долго инициализируется** - это нормально при первом запуске, модели скачиваются автоматически.
 
-**FTS возвращает пустой результат** — система автоматически переключается с AND на OR режим. Если оба пустые — запрос состоит только из стоп-слов.
+**FTS возвращает пустой результат** - система автоматически переключается с AND на OR режим. Если оба пустые - запрос состоит только из стоп-слов.
 
-**`MODEL_TYPE` не задан в `.env`** — по умолчанию используется значение `None`, что вызовет ошибку. Убедитесь, что `.env` создан и заполнен.
+**`MODEL_TYPE` не задан в `.env`** - по умолчанию используется значение `None`, что вызовет ошибку. Убедитесь, что `.env` создан и заполнен.
