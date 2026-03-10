@@ -7,7 +7,9 @@ CUR_MODEL_TYPE = os.getenv("MODEL_TYPE")
 from logger_config import setup_logger
 logger = setup_logger(__name__)
 
-def get_chroma_collection(db_path=f"DB/semantic_search_db_{CUR_MODEL_TYPE}", collection_name="vipnet_docs"):
+def get_chroma_collection(db_path=None, collection_name="vipnet_docs"):
+    if db_path is None:
+        db_path = f"DB/semantic_search_db_{CUR_MODEL_TYPE}"
     try:
         client = chromadb.PersistentClient(path=db_path)
         coll = client.get_or_create_collection(name=collection_name)

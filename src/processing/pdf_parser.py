@@ -29,9 +29,8 @@ def init_converter():
 def parse_pdf(path_to_fodler: str, save_path: str = 'temp', cache_path='temp'):
     results = {}
 
-    temp_dir = Path(save_path)
-    temp_dir.mkdir(parents=True, exist_ok=True)
     cache_dir = Path(cache_path)
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
 
     converter = None
@@ -52,11 +51,10 @@ def parse_pdf(path_to_fodler: str, save_path: str = 'temp', cache_path='temp'):
             
         result = converter.convert(pdf_path)
 
-        output_file = temp_dir / f"{pdf_path.stem}_extracted_content"
-        with open(f"{output_file}.md", "w", encoding="utf-8") as f:
+        with open(f"{json_cache}.md", "w", encoding="utf-8") as f:
             f.write(result.document.export_to_markdown())
 
-        with open(f"{output_file}.json", "w", encoding="utf-8") as f:
+        with open(f"{json_cache}.json", "w", encoding="utf-8") as f:
             f.write(json.dumps(result.document.export_to_dict(), indent=2, ensure_ascii=False))
 
         results[pdf_path.name] = result.document

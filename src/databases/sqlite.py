@@ -35,18 +35,19 @@ def save_to_sqlite(chunks, db_path):
     
     data_to_insert = []
     for i, chunk in enumerate(chunks):
-        # Готовим текст для поиска
         stemmed = normalize_for_fts(chunk["content"])
+        filename = chunk["metadata"].get("file", "doc")
+        unique_id = f"{filename}_chunk_{i}"
         
         data_to_insert.append((
-            f"id_{i}",
+            unique_id,
             chunk["content"],
             stemmed,
             json.dumps(chunk["metadata"], ensure_ascii=False)
-        ))
+        ))  
     
     # Очищаем старое и вставляем новое
-    cursor.execute("DELETE FROM docs_fts")
+    # cursor.execute("DELETE FROM docs_fts")
     cursor.executemany(
         "INSERT INTO docs_fts (id, original_content, stemmed_content, metadata) VALUES (?, ?, ?, ?)",
         data_to_insert

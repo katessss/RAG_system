@@ -88,7 +88,7 @@ def format_text(text, model_type, query_type):
     try:
         prefix = rules[model_type][query_type]
         return f"{prefix}{text}"
-    except:
+    except KeyError:
         logger.error("ВНИМАНИЕ! Не поддерживаемая модель или формат!")
         return text
         

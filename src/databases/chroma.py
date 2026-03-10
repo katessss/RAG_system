@@ -26,7 +26,9 @@ def save_to_chroma(chunks_with_vectors, collection_name, db_path):
     embeddings = []
 
     for i, item in enumerate(chunks_with_vectors):
-        ids.append(f"id_{i}")
+        filename = item["metadata"].get("file", "doc")
+        unique_id = f"{filename}_chunk_{i}" # Создаем уникальный ID: например, "Инструкция.pdf_chunk_5"
+        ids.append(unique_id)
         documents.append(item["content"])
         # Метаданные (нужно превратить None в пустые строки или числа, Chroma не любит None)
         meta = {

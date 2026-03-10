@@ -1,7 +1,11 @@
-def generate_qwen_answer(query: str, context: str, model, tokenizer):
+def generate_qwen_answer(query: str, context: str, model, tokenizer, max_context_length=6000):
     """
     Принимает вопрос и найденный контекст, возвращает ответ от qwen
     """
+
+    if len(context) > max_context_length * 3:
+        context = context[:max_context_length * 3] + "...\n[Текст обрезан]"
+
     messages = [
         {"role": "system", "content": "Ты инженер технической поддержки ViPNet. Отвечай только на основе предоставленного текста."},
         {"role": "user", "content": f"Контекст: {context}\n\nВопрос: {query}"}

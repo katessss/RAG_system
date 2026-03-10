@@ -29,5 +29,5 @@ def load_embedder(model_type: str, device=DEVICE):
         
     else:
         logger.error(f"Модель {model_type} не поддерживается")
-        exit()
+        raise ValueError(f"Unsupported model type: {model_type}")
         

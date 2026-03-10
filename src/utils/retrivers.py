@@ -18,7 +18,7 @@ def get_search_results(query, collection, sqlite_conn, model, model_type, top_k=
     
     # Если по AND ничего не нашли, пробуем более мягкий поиск через OR
     if not fts_results:
-        fts_results = fts_retrieve(query, sqlite_conn, type_of_search="OR", top_k=top_k)
+        fts_results = fts_retrieve(query=query, connection=sqlite_conn, type_of_search="OR", top_k=top_k)
 
     return semantic_results, fts_results
 
@@ -106,7 +106,7 @@ def semantic_retrieve(query, collection, model, model_type=CUR_MODEL_TYPE, top_k
 
         else:
             logger.error(f"Модель {model_type} не поддерживается!")
-            exit()
+            raise ValueError(f"Unsupported model type: {model_type}")
 
         
         results = collection.query(
@@ -129,7 +129,7 @@ def semantic_retrieve(query, collection, model, model_type=CUR_MODEL_TYPE, top_k
                 "page": metadata.get("page", 0),
                 "context": metadata.get("context", "Не указан"),
                 "source": metadata.get("source", "Неизвестный файл"), 
-                "score": round(1 - results["distances"][0][i], 4) # ChromaDB по умолчанию использует L2 distance 
+                "score": round(1 - results["distances"][0][i] / 2, 4) # ChromaDB по умолчанию использует L2 distance, используем формулу L2 = 2 - 2 cosine 
             })
 
         return formatted_results

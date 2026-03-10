@@ -14,6 +14,7 @@ def process_docling_to_chunks(result, max_text_len: int = 500, min_merge_thresho
     current_len = 0
     current_header = "Общая информация"
     pending_table_name = "" # Сюда будем ловить текст типа "Таблица 1..."
+    pending_pic_name = ""
 
     for element, _ in result.iterate_items():
         label = element.label
@@ -47,6 +48,11 @@ def process_docling_to_chunks(result, max_text_len: int = 500, min_merge_thresho
             pending_table_name = element.text.strip()
             continue
 
+        if isinstance(element, TextItem) and re.match(r"^Рисунок\s+\d+", element.text.strip()):
+            pending_pic_name = element.text.strip()
+            continue
+
+
         #  ОБРАБОТКА ТАБЛИЦ
         if isinstance(element, TableItem):
             table_md = element.export_to_markdown(doc=result)
@@ -71,8 +77,8 @@ def process_docling_to_chunks(result, max_text_len: int = 500, min_merge_thresho
             caption = ""
             if hasattr(element, 'caption') and element.caption:
                 caption = element.caption.text.strip()
-            elif pending_table_name and "Рисунок" in pending_table_name:
-                caption = pending_table_name
+            elif pending_pic_name and "Рисунок" in pending_pic_name:
+                caption = pending_pic_name
 
             # Если подпись так и не нашли - пропускаем, чтобы не плодить мусор
             if not caption:
