@@ -1,4 +1,4 @@
-# RAG-система для поиска по документации ViPNet
+# RAG-система для поиска по технической документации 
 
 Система гибридного поиска по технической документации ViPNet Coordinator HW 5. Объединяет семантический поиск (ChromaDB) и полнотекстовый поиск (SQLite FTS5) с переранжированием через cross-encoder. В качестве генератора ответов используется Qwen2.5-7B-Instruct.
 
@@ -104,8 +104,8 @@ DEVICE=cuda            # cuda | cpu | cuda:0 | cuda:1
 
 ```
 data/
-├── 01 ViPNet Coordinator HW 5. Подготовка к работе.pdf
-├── 02 ViPNet Coordinator HW 5. Настройка в CLI.pdf
+├── 01  Coordinator HW 5. Подготовка к работе.pdf
+├── 02  Coordinator HW 5. Настройка в CLI.pdf
 └── ...
 ```
 
